@@ -73,6 +73,23 @@ GitHub Action（`.github/workflows/deploy-site.yml`）在 main 有相关改动�
 
 仓库 Settings → Pages → Source 选 `gh-pages` 分支、根目录，即可访问。
 
+### 自定义域名
+
+域名写在 `site.config.json` 的 `domain` 字段，构建时会生成 `CNAME` 文件。
+
+**必须走这里配，不能只在 GitHub 页面上填**：gh-pages 分支每次部署都是整个重建的，如果 `CNAME` 不是构建产物，下一次部署就会把它删掉，GitHub 那边的自定义域名会跟着失效。
+
+DNS 侧需要一条记录：
+
+```
+类型    CNAME
+名称    ai-novel
+目标    cherrylover.github.io
+代理    DNS only（灰云）
+```
+
+用 Cloudflare 橙云代理也能通，但 GitHub 申请 Let's Encrypt 证书期间必须先灰云，否则验证会失败。证书签发完再决定要不要开代理。
+
 手动部署也一样简单，`site/dist` 是自包含的，扔进任何静态托管都能跑：
 
 ```bash

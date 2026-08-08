@@ -217,12 +217,16 @@ async function main() {
   await copyTree(SRC_DIR, OUT);
   await writeFile(path.join(OUT, '.nojekyll'), '', 'utf8');
 
+  // gh-pages 分支每次部署都是重建的，自定义域名必须由构建产出，否则下一次部署就把它冲掉了
+  if (config.domain) await writeFile(path.join(OUT, 'CNAME'), `${config.domain}\n`, 'utf8');
+
   const words = chapters.reduce((a, c) => a + c.c, 0);
   const uniq = new Set(chapters.map((c) => c.n));
   console.log(`输出目录：${OUT}`);
   console.log(`章节文件：${chapters.length} 个（原作 ${origNums.length} / 续写 ${fanNums.length}），覆盖 ${uniq.size} 章`);
   console.log(`总字数：${words.toLocaleString('zh-CN')}（约 ${Math.round(words / 10000)} 万）`);
   console.log(`资料：${docs.length} 篇${images.length ? ` · 图片 ${images.length} 张` : ''}`);
+  if (config.domain) console.log(`自定义域名：${config.domain}（已写入 CNAME）`);
   if (Object.keys(notes).length) {
     console.log(`章号提示：${Object.keys(notes).map((n) => `第 ${n} 章`).join('、')}`);
   }

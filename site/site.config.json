@@ -1,0 +1,21 @@
+{
+  "heroTitle": ["我把现代文明", "传回了修仙界"],
+  "fanBlurb": "夏恒与天衍宗建立关系，赵小凡收束医师考核，大夏第一次注意到夏恒。",
+  "gallery": [
+    { "label": "赵小凡 · 人物立绘", "image": "art-zhaoxiaofan.jpg" },
+    { "label": "周玄长老 · 人物立绘", "image": "art-zhouxuan.jpg" },
+    { "label": "天衍宗山门 · 场景", "image": "art-tianyanzong.jpg" },
+    { "label": "两界通道 · 场景", "image": "art-tongdao.jpg" }
+  ],
+  "docs": [
+    { "name": "主要人物", "source": "写作准备/主要人物.md", "desc": "核心人物、重要配角、关系与当前状态" },
+    { "name": "世界与阵营", "source": "写作准备/世界与阵营.md", "desc": "两界设定、主要势力与信息差" },
+    { "name": "事件脉络", "source": "写作准备/事件脉络.md", "desc": "按阶段整理的故事发展与当前落点" },
+    { "name": "写作风格", "source": "写作准备/写作风格.md", "desc": "续写遵守的语言、节奏与章节规范" },
+    { "name": "续写对照记录", "source": "写作准备/续写对照记录.md", "desc": "续写批次与原作更新的长期对照" },
+    { "name": "原稿检查记录", "source": "写作准备/原稿检查记录.md", "desc": "章节数量与原始命名异常" },
+    { "name": "项目说明", "source": "README.md", "desc": "项目目的、规范与资料采用顺序" }
+  ],
+  "docImages": {},
+  "skipDocs": ["写作准备/README.md"]
+}

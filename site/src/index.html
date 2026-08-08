@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="day">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>我把现代文明传回了修仙界 · 续写探索</title>
+<meta name="description" content="ANCL 续写探索站：收录《我把现代文明传回了修仙界》前 250 章原文与第 251 章起的续写线，两条线并行保留，可切换、可对照、可全文检索。" />
+<meta name="color-scheme" content="light dark" />
+<meta property="og:title" content="我把现代文明传回了修仙界 · 续写探索" />
+<meta property="og:description" content="原文与续写线并行收录的阅读站。" />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Ccircle%20cx='16'%20cy='16'%20r='16'%20fill='%23eef3f6'/%3E%3Ccircle%20cx='16'%20cy='16'%20r='7'%20fill='%2335637f'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/styles.css" />
+<script>
+  /* 首屏之前先落地主题与排版，避免闪烁 */
+  (function () {
+    try {
+      var t = localStorage.getItem('ancl:theme');
+      if (t !== 'day' && t !== 'night') {
+        t = matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
+      }
+      document.documentElement.dataset.theme = t;
+      var fs = +localStorage.getItem('ancl:fs') || 19;
+      var lh = +localStorage.getItem('ancl:lh') || 2.05;
+      document.documentElement.style.setProperty('--read-fs', fs + 'px');
+      document.documentElement.style.setProperty('--read-lh', lh);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="hdr">
+    <div class="hdr-in">
+      <a class="brand" href="#/">
+        <span class="brand-dot"></span>
+        <span class="brand-name">天衍</span>
+      </a>
+      <nav class="nav" id="nav"></nav>
+      <button class="pill-ghost" id="themeBtn" type="button" title="切换主题">墨夜</button>
+      <button class="pill-ghost" id="setBtn" type="button">阅读设置</button>
+    </div>
+    <div class="setbar" id="setbar" hidden>
+      <div class="setbar-in">
+        <div class="set-grp">
+          <span class="set-k">字号</span>
+          <button class="sq" type="button" data-fs="-1">A-</button>
+          <span class="set-v" id="fsLabel">19px</span>
+          <button class="sq" type="button" data-fs="1">A+</button>
+        </div>
+        <div class="set-grp">
+          <span class="set-k">行距</span>
+          <button class="lh" type="button" data-lh="1.8">紧凑</button>
+          <button class="lh" type="button" data-lh="2.05">适中</button>
+          <button class="lh" type="button" data-lh="2.4">疏朗</button>
+        </div>
+        <div class="set-hint">← → 键翻页 · 阅读进度自动记忆</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main" id="main">
+    <div class="loading">载入中…</div>
+  </main>
+
+  <div class="fillu" id="fillu">
+    <div class="wash"></div>
+    <i></i><i></i><i></i>
+    <div class="fillu-in" id="filluIn">
+      <div class="fillu-slot">
+        <span>页脚插画位 · 云海宫阙横幅 · data/images/footer.jpg</span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ftr">
+    <div class="ftr-in">
+      <span>ANCL · AI Novel Continuation Lab</span>
+      <a href="#/about">免责声明</a>
+    </div>
+  </footer>
+
+</div>
+
+<noscript>
+  <div style="max-width:680px;margin:0 auto;padding:40px 20px;line-height:2">
+    本站是纯静态的单页阅读站，需要浏览器开启 JavaScript 才能载入章节。
+    章节原文同时以纯文本形式放在 <code>data/chapters/</code> 目录下，可直接访问。
+  </div>
+</noscript>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

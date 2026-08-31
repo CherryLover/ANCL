@@ -276,6 +276,8 @@ a:hover { color: var(--tech); }
 .orig .line-head span { color: var(--jade); }
 .fan .line-head i { background: var(--tech); box-shadow: 0 0 10px var(--tech); }
 .fan .line-head span, .fan a { color: var(--tech); }
+.next .line-head i { background: var(--jin); box-shadow: 0 0 10px var(--jin); }
+.next .line-head span, .next a { color: var(--jin); }
 .lines-foot { margin: 18px 0 0; font-size: 13px; color: var(--faint); line-height: 1.9; }
 
 .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }

@@ -8,7 +8,7 @@
 
   var S = {
     idx: null,          // index.json
-    map: null,          // Map<章号, {n, orig?, fan?}>
+    map: null,          // Map<章号, {n, orig?, fan?, next?}>
     nums: [],           // 升序章号
     route: { view: 'home' },
     paras: [], cmpA: [], cmpB: [],
@@ -36,6 +36,12 @@
     try { localStorage.setItem(LS + k, typeof v === 'string' ? v : JSON.stringify(v)); } catch (e) {}
   }
   function href(n, s) { return '#/read/' + n + '/' + s; }
+  function sourceLabel(s) {
+    return s === 'orig' ? 'A · 原作者正文' : s === 'fan' ? 'B · 第一版续写' : 'C · 第二版续写';
+  }
+  function sourceShort(s) { return s === 'orig' ? 'A 原作' : s === 'fan' ? 'B 续写' : 'C 续写'; }
+  function sourceOrder(s) { return s === 'orig' ? 0 : s === 'fan' ? 1 : 2; }
+  function preferred(e) { return e.next || e.fan || e.orig || null; }
 
   /* ---------------- Markdown ---------------- */
 
@@ -126,13 +132,13 @@
   function pick(n, s) {
     var e = entry(n);
     if (!e) return null;
-    return e[s] || e.orig || e.fan || null;
+    return e[s] || preferred(e);
   }
 
   function neighbour(delta) {
     var e = entry(S.route.n + delta);
     if (!e) return '';
-    var s = e[S.route.s] ? S.route.s : (e.fan ? 'fan' : 'orig');
+    var s = e[S.route.s] ? S.route.s : (e.next ? 'next' : e.fan ? 'fan' : 'orig');
     return href(S.route.n + delta, s);
   }
 
@@ -169,8 +175,10 @@
     var meta = S.idx.meta;
     var orig = chs.filter(function (c) { return c.s === 'orig'; });
     var fan = chs.filter(function (c) { return c.s === 'fan'; });
+    var next = chs.filter(function (c) { return c.s === 'next'; });
     var words = Math.round(chs.reduce(function (a, c) { return a + c.c; }, 0) / 10000);
     var firstFan = fan.length ? fan[0].n : null;
+    var firstNext = next.length ? next[0].n : null;
     var origMax = orig.length ? orig[orig.length - 1].n : 0;
 
     var resumeHref = S.resume && S.map.has(S.resume.n) ? href(S.resume.n, S.resume.s) : '#/read/1/orig';
@@ -178,9 +186,9 @@
 
     var stats = [
       [orig.length, '原文章节'],
-      [fan.length, '续写章节'],
+      [fan.length + next.length, '续写章节'],
       [words + '万', '总字数'],
-      [fan.length ? '2' : '1', '并行线路']
+      [next.length ? '3' : fan.length ? '2' : '1', '并行线路']
     ];
 
     var gallery = (meta.gallery || []).map(function (g) {
@@ -195,11 +203,12 @@
         '<div class="hero-in">' +
           '<div class="eyebrow"><span></span><span>ANCL · 续写探索</span></div>' +
           '<h1>' + meta.heroTitle.map(esc).join('<br />') + '</h1>' +
-          '<p class="lede">原文 ' + origMax + ' 章与续写线并行收录。一条是原作者的元阳界，一条是我们从第 ' + origMax + ' 章之后推演出的另一种可能。两条线同时保留，谁也不覆盖谁。</p>' +
+          '<p class="lede">A 线收录原作者正文，B 线保留第 250 章基点的历史续写，C 线将从第 319 章之后继续。三条内容线独立保存，互不覆盖。</p>' +
           '<div class="cta">' +
             '<a class="solid" href="' + resumeHref + '">' + resumeLabel + '</a>' +
             '<a class="ghost" href="#/toc">全书目录</a>' +
             (firstFan ? '<a class="ghost accent" href="' + href(firstFan, 'fan') + '">直达续写线 · 第 ' + firstFan + ' 章</a>' : '') +
+            (firstNext ? '<a class="ghost accent" href="' + href(firstNext, 'next') + '">直达 C 线 · 第 ' + firstNext + ' 章</a>' : '') +
           '</div>' +
           '<div class="stats">' + stats.map(function (s) {
             return '<div><b>' + esc(s[0]) + '</b><span>' + s[1] + '</span></div>';
@@ -208,22 +217,29 @@
       '</section>' +
 
       '<section class="sec">' +
-        '<h2>两条线</h2>' +
+        '<h2>三条内容线</h2>' +
         '<div class="lines">' +
           '<div class="line-card orig">' +
-            '<div class="line-head"><i></i><span>原作线</span></div>' +
+            '<div class="line-head"><i></i><span>A · 原作者正文</span></div>' +
             '<p>第 1 至 ' + origMax + ' 章原文，判断人物、设定与情节的最高依据。原作者更新新章后会继续并入这条线。</p>' +
             '<a href="#/read/1/orig">从第 1 章开始 →</a>' +
           '</div>' +
           '<div class="line-card fan">' +
-            '<div class="line-head"><i></i><span>续写线</span></div>' +
+            '<div class="line-head"><i></i><span>B · 第一版续写</span></div>' +
             '<p>' + (fan.length
               ? '第 ' + fan[0].n + ' 至 ' + fan[fan.length - 1].n + ' 章。' + esc(meta.fanBlurb)
               : '尚未开始。') + '</p>' +
             (firstFan ? '<a href="' + href(firstFan, 'fan') + '">进入续写线 →</a>' : '') +
           '</div>' +
+          '<div class="line-card next">' +
+            '<div class="line-head"><i></i><span>C · 第二版续写</span></div>' +
+            '<p>' + (next.length
+              ? '第 ' + next[0].n + ' 至 ' + next[next.length - 1].n + ' 章，以官方第 319 章为基点。'
+              : '以官方第 319 章为基点，基础资料整理完成后从第 320 章开始。') + '</p>' +
+            (firstNext ? '<a href="' + href(firstNext, 'next') + '">进入 C 线 →</a>' : '') +
+          '</div>' +
         '</div>' +
-        '<p class="lines-foot">同一章出现双版本时，章节页顶部的切换器会同时点亮两条线，也可以开启左右对照并排阅读。</p>' +
+        '<p class="lines-foot">同一章出现多个版本时，可在章节页切换内容线；A 线与所选续写线可以左右对照。</p>' +
       '</section>' +
 
       '<section class="sec">' +
@@ -260,12 +276,13 @@
           p[0] + ' – ' + p[p.length - 1] + '</button>';
       }).join('') + '</div>' +
       '<div class="toc-list">' + cur.map(function (n) {
-        var e = entry(n), c = e.orig || e.fan;
-        var tag = e.fan ? (e.orig ? '双版本' : '续写') : '原作';
-        return '<a href="' + href(n, e.fan ? 'fan' : 'orig') + '">' +
+        var e = entry(n), c = preferred(e);
+        var versions = ['orig', 'fan', 'next'].filter(function (s) { return !!e[s]; });
+        var tag = versions.length > 1 ? versions.map(sourceShort).join(' / ') : sourceShort(c.s);
+        return '<a href="' + href(n, c.s) + '">' +
           '<span class="toc-num">' + String(n).padStart(3, '0') + '</span>' +
           '<span class="toc-title">' + esc(c.t) + '</span>' +
-          '<span class="tag' + (e.fan ? ' fan' : '') + '">' + tag + '</span></a>';
+          '<span class="tag' + (c.s !== 'orig' ? ' fan' : '') + '">' + tag + '</span></a>';
       }).join('') + '</div>' +
     '</section></div>';
   }
@@ -282,16 +299,20 @@
         '<p class="sub">第 ' + n + ' 章尚未收录。</p><p><a href="#/toc">回到目录 →</a></p></section></div>';
     }
     var c = pick(n, s);
-    var both = !!(e.orig && e.fan);
+    var continuation = s === 'next' ? e.next : s === 'fan' ? e.fan : (e.next || e.fan);
+    var both = !!(e.orig && continuation);
     var note = S.idx.notes[n];
 
     var bar = '<div class="reader-bar">' +
       (e.orig
-        ? '<a class="pill jade' + (s === 'orig' && !S.compare ? ' on' : '') + '" href="' + href(n, 'orig') + '">原作线</a>'
-        : '<span class="pill dead">原作线</span>') +
+        ? '<a class="pill jade' + (s === 'orig' && !S.compare ? ' on' : '') + '" href="' + href(n, 'orig') + '">A · 原作</a>'
+        : '<span class="pill dead">A · 原作</span>') +
       (e.fan
-        ? '<a class="pill tech' + (s === 'fan' && !S.compare ? ' on' : '') + '" href="' + href(n, 'fan') + '">续写线</a>'
-        : '<span class="pill dead">续写线</span>') +
+        ? '<a class="pill tech' + (s === 'fan' && !S.compare ? ' on' : '') + '" href="' + href(n, 'fan') + '">B · 第一版续写</a>'
+        : '<span class="pill dead">B · 第一版续写</span>') +
+      (e.next
+        ? '<a class="pill tech' + (s === 'next' && !S.compare ? ' on' : '') + '" href="' + href(n, 'next') + '">C · 第二版续写</a>'
+        : '<span class="pill dead">C · 第二版续写</span>') +
       (both
         ? '<button class="pill jade' + (S.compare ? ' on' : '') + '" type="button" data-act="compare">左右对照</button>'
         : '<span class="pill dead">左右对照</span>') +
@@ -302,14 +323,14 @@
     var content;
     if (S.compare && both) {
       content = '<div class="cmp">' +
-        '<div><div class="col-k jade">原作线</div><h2>' + esc(e.orig.t) + '</h2>' +
+        '<div><div class="col-k jade">A · 原作者正文</div><h2>' + esc(e.orig.t) + '</h2>' +
           '<div class="body">' + paras(S.cmpA) + '</div></div>' +
-        '<div><div class="col-k tech">续写线</div><h2>' + esc(e.fan.t) + '</h2>' +
+        '<div><div class="col-k tech">' + sourceLabel(continuation.s) + '</div><h2>' + esc(continuation.t) + '</h2>' +
           '<div class="body">' + paras(S.cmpB) + '</div></div>' +
       '</div>';
     } else {
       content = '<div class="sheet">' +
-        '<div class="kicker">第 ' + n + ' 章' + (s === 'fan' ? ' · 续写线' : '') + '</div>' +
+        '<div class="kicker">第 ' + n + ' 章 · ' + sourceLabel(c.s) + '</div>' +
         '<h1>' + esc(c ? c.t : '') + '</h1>' +
         '<div class="rule"></div>' +
         '<div class="body">' + paras(S.paras) + '</div>' +
@@ -344,7 +365,7 @@
         '<div class="res-head">' +
           '<span class="res-num">第 ' + r.n + ' 章</span>' +
           '<span class="res-title">' + esc(r.t) + '</span>' +
-          '<span class="tag' + (r.s === 'fan' ? ' fan' : '') + '">' + (r.s === 'fan' ? '续写' : '原作') + '</span>' +
+          '<span class="tag' + (r.s !== 'orig' ? ' fan' : '') + '">' + sourceShort(r.s) + '</span>' +
         '</div>' +
         (r.snippet
           ? '<div class="res-snip">' + esc(r.before) + '<mark>' + esc(r.hit) + '</mark>' + esc(r.after) + '</div>'
@@ -378,7 +399,7 @@
         '<p>本项目仅用于个人研究与探索，主要观察 AI 在小说续写、风格延续、剧情推演，以及续写与原作者后续更新对照方面的表现，不用于商业用途。</p>' +
         '<p>本站收录的原文章节，以及相关人物、世界观和故事设定，其著作权及相关权益归原作者和合法权利人所有。本项目不主张拥有原文权利，也不授予任何原文转载、再次分发或商业使用许可。</p>' +
         '<p>如果原作者或其他合法权利人认为本项目中的任何内容涉及侵权，请通过 GitHub Issue 联系。确认后，本项目将立即删除相关内容、下架仓库并停止后续维护。</p>' +
-        '<p>续写内容由本工作区基于前 ' + S.idx.meta.origMax + ' 章原文推演生成，与原作者立场无关。</p>' +
+        '<p>B、C 两条续写线由本工作区在不同原作基点上推演生成，与原作者立场无关。</p>' +
       '</div>' +
     '</section></div>';
   }
@@ -415,9 +436,10 @@
     if (v === 'read') {
       var n = parseInt(parts[1], 10) || 1;
       var e = entry(n);
-      // 不指定版本时，与目录一致：有续写就先给续写
-      var s = (parts[2] === 'fan' || parts[2] === 'orig') ? parts[2] : (e && e.fan ? 'fan' : 'orig');
-      if (e && !e[s]) s = e.orig ? 'orig' : 'fan';
+      // 不指定版本时，与目录一致：优先展示最新续写线，其次历史续写和原作。
+      var allowed = { orig: true, fan: true, next: true };
+      var s = allowed[parts[2]] ? parts[2] : (e && preferred(e) ? preferred(e).s : 'orig');
+      if (e && !e[s]) s = preferred(e).s;
       S.route = { view: 'read', n: n, s: s };
       S.compare = false;
       S.paras = [];
@@ -466,8 +488,9 @@
 
   function loadCompare() {
     var e = entry(S.route.n);
-    if (!e || !e.orig || !e.fan) return;
-    Promise.all([chapterText(e.orig.f), chapterText(e.fan.f)]).then(function (r) {
+    var continuation = S.route.s === 'next' ? e && e.next : S.route.s === 'fan' ? e && e.fan : e && (e.next || e.fan);
+    if (!e || !e.orig || !continuation) return;
+    Promise.all([chapterText(e.orig.f), chapterText(continuation.f)]).then(function (r) {
       S.cmpA = bodyOf(r[0]);
       S.cmpB = bodyOf(r[1]);
       render();
@@ -640,7 +663,7 @@
   fetch('data/index.json')
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      d.chapters.sort(function (a, b) { return a.n - b.n || (a.s === 'orig' ? -1 : 1); });
+      d.chapters.sort(function (a, b) { return a.n - b.n || sourceOrder(a.s) - sourceOrder(b.s); });
       var map = new Map();
       d.chapters.forEach(function (c) {
         var e = map.get(c.n) || { n: c.n };

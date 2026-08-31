@@ -8,7 +8,7 @@
  *   node site/build.mjs            # 输出到 site/dist
  *   node site/build.mjs --out /tmp/x
  *
- * 新增章节时不需要改任何代码：把文件按 `0256_第256章 标题.txt` 的规则放进 `章节正文/`，
+ * 新增章节时不需要改任何代码：把文件按 `A-0256_第256章 标题.txt` 的规则放进 `章节正文/`，
  * 重新构建即可，索引、目录、统计、上下章都会自动更新。
  */
 
@@ -25,9 +25,10 @@ const SRC_DIR = path.join(SITE, 'src');
 const IMAGE_DIR = path.join(SITE, 'images');
 const CONFIG_FILE = path.join(SITE, 'site.config.json');
 
-/** 文件名：<来源1位><章号><下划线>第<章号>章 <标题>.txt */
-const NAME_RE = /^(\d)(\d+)_第(\d+)章[ 　]*(.*)\.txt$/;
-const SOURCE_OF = { '0': 'orig', '1': 'fan' };
+/** 文件名：<内容线>-<四位章号>_<正文标题>.txt */
+const NAME_RE = /^([ABC])-(\d{4})_第(\d+)章[ 　]*(.*)\.txt$/;
+const SOURCE_OF = { A: 'orig', B: 'fan', C: 'next' };
+const SOURCE_ORDER = { orig: 0, fan: 1, next: 2 };
 
 function arg(name, dflt) {
   const i = process.argv.indexOf(name);
@@ -54,10 +55,11 @@ async function collectChapters() {
       warn(`文件名不符合规则，已跳过：${file}`);
       continue;
     }
-    const [, srcDigit, seq, labelled, title] = m;
-    const source = SOURCE_OF[srcDigit];
+    const [, line, seq, labelled, title] = m;
+    const source = SOURCE_OF[line];
     if (!source) {
-      warn(`未知来源前缀 ${srcDigit}，按原作处理：${file}`);
+      warn(`未知内容线 ${line}，已跳过：${file}`);
+      continue;
     }
     const n = Number.parseInt(seq, 10);
     const raw = await readFile(path.join(CHAPTER_DIR, file), 'utf8');
@@ -77,8 +79,9 @@ async function collectChapters() {
     }
 
     chapters.push({
-      f: `${srcDigit}${seq}`,
-      s: source || 'orig',
+      f: `${line}-${seq}`,
+      l: line,
+      s: source,
       n,
       t: title.trim(),
       c: text.replace(/\s/g, '').length,
@@ -87,7 +90,7 @@ async function collectChapters() {
     });
   }
 
-  chapters.sort((a, b) => a.n - b.n || (a.s === 'orig' ? -1 : 1));
+  chapters.sort((a, b) => a.n - b.n || SOURCE_ORDER[a.s] - SOURCE_ORDER[b.s]);
 
   const seen = new Set();
   for (const c of chapters) {
@@ -187,6 +190,7 @@ async function main() {
   const imageUrl = (file) => (file && images.includes(file) ? `data/images/${encodeURIComponent(file)}` : null);
   const origNums = chapters.filter((c) => c.s === 'orig').map((c) => c.n);
   const fanNums = chapters.filter((c) => c.s === 'fan').map((c) => c.n);
+  const nextNums = chapters.filter((c) => c.s === 'next').map((c) => c.n);
 
   const docImages = {};
   for (const [name, file] of Object.entries(config.docImages || {})) {
@@ -201,6 +205,7 @@ async function main() {
       fanBlurb: config.fanBlurb || '',
       origMax: origNums.length ? Math.max(...origNums) : 0,
       fanRange: fanNums.length ? [Math.min(...fanNums), Math.max(...fanNums)] : null,
+      nextRange: nextNums.length ? [Math.min(...nextNums), Math.max(...nextNums)] : null,
       footer: imageUrl(images.find((f) => /^footer\./i.test(f))),
       gallery: (config.gallery || []).map((g) =>
         typeof g === 'string' ? { label: g, src: null } : { label: g.label, src: imageUrl(g.image) }
@@ -209,7 +214,7 @@ async function main() {
     },
     docs: docs.map((d) => ({ name: d.name, desc: d.desc })),
     notes,
-    chapters: chapters.map(({ f, s, n, t, c }) => ({ f, s, n, t, c })),
+    chapters: chapters.map(({ f, l, s, n, t, c }) => ({ f, l, s, n, t, c })),
   };
 
   await writeFile(path.join(OUT, 'data', 'index.json'), JSON.stringify(index), 'utf8');
@@ -223,7 +228,7 @@ async function main() {
   const words = chapters.reduce((a, c) => a + c.c, 0);
   const uniq = new Set(chapters.map((c) => c.n));
   console.log(`输出目录：${OUT}`);
-  console.log(`章节文件：${chapters.length} 个（原作 ${origNums.length} / 续写 ${fanNums.length}），覆盖 ${uniq.size} 章`);
+  console.log(`章节文件：${chapters.length} 个（A 原作 ${origNums.length} / B 续写 ${fanNums.length} / C 续写 ${nextNums.length}），覆盖 ${uniq.size} 章`);
   console.log(`总字数：${words.toLocaleString('zh-CN')}（约 ${Math.round(words / 10000)} 万）`);
   console.log(`资料：${docs.length} 篇${images.length ? ` · 图片 ${images.length} 张` : ''}`);
   if (config.domain) console.log(`自定义域名：${config.domain}（已写入 CNAME）`);
